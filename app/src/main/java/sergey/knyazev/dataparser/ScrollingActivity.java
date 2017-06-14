@@ -84,9 +84,10 @@ public class ScrollingActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             loadedText.setText(content);
-            URL url = new URL("http://image10.bizrate-images.com/resize?sq=60&uid=2216744464");
+            /*URL url = new URL("http://image10.bizrate-images.com/resize?sq=60&uid=2216744464");
             Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
             imageView.setImageBitmap(bmp);
+            */
 
         }
 
