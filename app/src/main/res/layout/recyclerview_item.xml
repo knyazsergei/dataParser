@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical">
             <TextView
-                android:id="@+id/textView"
+                android:id="@+id/title"
                 android:layout_alignParentLeft="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -28,7 +28,7 @@
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView
-                android:id="@+id/dateTextView"
+                android:id="@+id/date"
                 android:layout_alignParentRight="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -36,12 +36,5 @@
                 android:text="date"
                 android:textAppearance="@style/TextAppearance.AppCompat" />
         </RelativeLayout>
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingBottom="5dp"
-            android:text="Small Text"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 </android.support.v7.widget.CardView>

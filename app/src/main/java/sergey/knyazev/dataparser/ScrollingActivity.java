@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -18,19 +21,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public class ScrollingActivity extends AppCompatActivity {
-
-    public TextView loadedText;
+    private MyRecyclerViewAdapter mAdapter;
+    private ArrayList<DataObject> mData;
+    private TextView loadedText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scrolling);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+/*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,6 +47,8 @@ public class ScrollingActivity extends AppCompatActivity {
                 new ProgressTask().execute("https://lifehacker.ru/feed/");
             }
         });
+*/
+        InitItems();
 
     }
 
@@ -60,6 +67,29 @@ public class ScrollingActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private void InitItems()
+    {
+        mData = new ArrayList<DataObject>();
+        DataObject mObj = new DataObject("hello", "http://vk.com/", "date");
+        mData.add(mObj);
+        mData.add(mObj);
+        mData.add(mObj);
+        mData.add(mObj);
+
+        mAdapter = new MyRecyclerViewAdapter(mData);
+
+        //Items view
+        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setAdapter(mAdapter);
+        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
+        mRecyclerView.addItemDecoration(itemDecoration);
+
+    }
+
 
     private class ProgressTask extends AsyncTask<String, Void, String> {
         @Override
