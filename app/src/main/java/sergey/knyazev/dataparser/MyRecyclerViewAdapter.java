@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class MyRecyclerViewAdapter extends RecyclerView
         .Adapter<MyRecyclerViewAdapter.DataObjectHolder> {
-    private static String LOG_TAG = "MyRecyclerViewAdapter";
+
     private ArrayList<DataObject> mDataset;
     private static MyClickListener myClickListener;
 
@@ -28,6 +28,7 @@ public class MyRecyclerViewAdapter extends RecyclerView
             super(itemView);
             mTitleView = (TextView) itemView.findViewById(R.id.title);
             mDateView = (TextView) itemView.findViewById(R.id.date);
+
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
         }
@@ -57,6 +58,11 @@ public class MyRecyclerViewAdapter extends RecyclerView
         this.notifyDataSetChanged();
     }
 
+    public void addItem(DataObject item) {
+        mDataset.add(item);
+        this.notifyDataSetChanged();
+    }
+
     @Override
     public DataObjectHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyclerview_item, parent, false);
@@ -67,17 +73,10 @@ public class MyRecyclerViewAdapter extends RecyclerView
 
     @Override
     public void onBindViewHolder(DataObjectHolder holder, int position) {
-        /*
-        holder.title.setText(mDataset.get(position).getTitle());
-        String  date = null;
-        try {
-            date = mDataset.get(position).getDate();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        holder.mdate.setText(date);
-        holder.description.setText(mDataset.get(position).getDescription());
-        */
+
+        holder.mTitleView.setText(mDataset.get(position).getTitle());
+        //holder.description.setText(mDataset.get(position).getLink());
+        holder.mDateView.setText(mDataset.get(position).getDate());
     }
 
     public void addItem(DataObject dataObj, int index) {
