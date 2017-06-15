@@ -1,6 +1,7 @@
 package sergey.knyazev.dataparser;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -47,6 +48,7 @@ public class ScrollingActivity extends AppCompatActivity {
     private MyRecyclerViewAdapter mAdapter;
     private ArrayList<DataObject> mData;
     private XMLItemsDbHelper mDbHelper;
+    private boolean notify = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +67,8 @@ public class ScrollingActivity extends AppCompatActivity {
         });
 
         InitItems();
+        startService(new Intent(this, UpdateService.class));
+
     }
 
     @Override
@@ -165,7 +169,7 @@ public class ScrollingActivity extends AppCompatActivity {
     }
 
 
-    private class ProgressTask extends AsyncTask<String, Void, String> {
+    public class ProgressTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... path) {
 
@@ -224,29 +228,8 @@ public class ScrollingActivity extends AppCompatActivity {
             return result;
         }
 
-        private String getContent(String path) throws IOException, ParserConfigurationException, SAXException {
-            /*BufferedReader reader=null;
-            try {
-                URL url = new URL(path);
-                HttpsURLConnection c=(HttpsURLConnection)url.openConnection();
-                c.setRequestMethod("GET");
-                c.setReadTimeout(10000);
-                c.connect();
-                reader= new BufferedReader(new InputStreamReader(c.getInputStream()));
-                StringBuilder buf=new StringBuilder();
-                String line = null;
-                while ((line=reader.readLine()) != null) {
-                    buf.append(line + "\n");
-                }
-                return(buf.toString());
-            }
-            finally {
-                if (reader != null) {
-                    reader.close();
-                }
-            }
-        }*/
-            ArrayList<DataObject> result = new ArrayList<DataObject>();
+        public String getContent(String path) throws IOException, ParserConfigurationException, SAXException {
+              ArrayList<DataObject> result = new ArrayList<DataObject>();
             try {
                 URL url = new URL(path);
                 DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -278,6 +261,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
                     if(InsertObj(title, link, date))
                     {
+                        notify = true;
                         DataObject obj = new DataObject(title, link, date);
                         mData.add(obj);
                     }
