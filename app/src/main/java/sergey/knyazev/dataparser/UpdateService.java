@@ -27,13 +27,14 @@ import static android.R.attr.name;
 
 public class UpdateService extends Service {
 
-    NotificationManager nm;
     final String LOG_TAG = "Service log:";
     int i = 0;
     Timer timer;
     TimerTask tTask;
-    long interval = 10000;
+    long interval = 5000;
     String time;
+    InfoUpdater infoUpdate;
+    int mNewMessages = 0;
 
 
     @Override
@@ -41,13 +42,19 @@ public class UpdateService extends Service {
         super.onCreate();
         Log.i(LOG_TAG, "service");
         timer = new Timer();
+        infoUpdate = new InfoUpdater(mNewMessages);
         tTask = new TimerTask() {
             public void run() {
-                nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                Log.d(LOG_TAG,"run");
-                sendNotif();
+                if (!infoUpdate.isAlive()) {
+                    infoUpdate.start();
+                    infoUpdate.join();
+                    if (infoUpdate.getNewMessagesCount() > 0) {
+                        sendNotif();
+                    }
+                }
             }
         };
+
         timer.schedule(tTask, interval, interval);
     }
 

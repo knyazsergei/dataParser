@@ -62,7 +62,7 @@ public class ScrollingActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Toast.makeText(ScrollingActivity.this, "Загрузка...", Toast.LENGTH_SHORT).show();
-                new ProgressTask().execute("https://lifehacker.ru/feed/");
+                new ProgressTask().execute(getString(R.string.BASE_URL));
             }
         });
 
