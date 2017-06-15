@@ -8,6 +8,9 @@ import android.widget.TextView;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+
+import sergey.knyazev.dataparser.Data.DataObjectComparator;
 
 /**
  * Created by Sergey on 14.06.2017.
@@ -35,12 +38,12 @@ public class MyRecyclerViewAdapter extends RecyclerView
 
         @Override
         public void onClick(View v) {
-            myClickListener.onItemClick(getPosition(), v);
+            myClickListener.onItemClick(getPosition(), v);//getAdapterPosition()
         }
 
         @Override
         public boolean onLongClick(View v) {
-            myClickListener.onItemLongClick(getPosition(), v);
+            myClickListener.onItemLongClick(getPosition(), v);//getAdapterPosition()
             return true;
         }
     }
@@ -50,10 +53,12 @@ public class MyRecyclerViewAdapter extends RecyclerView
     }
 
     public MyRecyclerViewAdapter(ArrayList<DataObject> myDataset) {
-        mDataset = myDataset;
+        updateData(myDataset);
     }
 
     public void updateData(ArrayList<DataObject> myDataset) {
+        Collections.sort(myDataset, new DataObjectComparator());
+        Collections.reverse(myDataset);
         mDataset = myDataset;
         this.notifyDataSetChanged();
     }

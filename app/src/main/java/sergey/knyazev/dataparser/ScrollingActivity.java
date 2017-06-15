@@ -1,5 +1,8 @@
 package sergey.knyazev.dataparser;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -37,9 +40,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import sergey.knyazev.dataparser.Data.XMLItemsContract;
+import sergey.knyazev.dataparser.Data.XMLItemsDbHelper;
+
 public class ScrollingActivity extends AppCompatActivity {
     private MyRecyclerViewAdapter mAdapter;
     private ArrayList<DataObject> mData;
+    private XMLItemsDbHelper mDbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,19 +85,83 @@ public class ScrollingActivity extends AppCompatActivity {
 
     private void InitItems()
     {
-        mData = new ArrayList<DataObject>();
-
-        mAdapter = new MyRecyclerViewAdapter(mData);
-
+        mDbHelper = new XMLItemsDbHelper(this);
+        mData = GetDataFromDB();
         //Items view
         RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         mRecyclerView.setHasFixedSize(true);
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
+        RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                Log.i("scrolled", String.valueOf(dy));
+            /*
+            int visibleItemCount = layoutManager.getChildCount();//смотрим сколько элементов на экране
+            int totalItemCount = layoutManager.getItemCount();//сколько всего элементов
+            int firstVisibleItems = layoutManager.findFirstVisibleItemPosition();//какая позиция первого элемента
+
+            if (!isLoading) {//проверяем, грузим мы что-то или нет, эта переменная должна быть вне класса  OnScrollListener
+                if ( (visibleItemCount+firstVisibleItems) >= totalItemCount) {
+                    isLoading = true;//ставим флаг что мы попросили еще элемены
+                    if(loadingListener != null){
+                        loadingListener.loadMoreItems(totalItemCount);//тут я использовал калбэк который просто говорит наружу что нужно еще элементов и с какой позиции начинать загрузку
+                    }
+                }
+            }
+            */
+            }
+        };
+
+        mRecyclerView.setOnScrollListener(scrollListener);
+        mAdapter = new MyRecyclerViewAdapter(mData);
         mRecyclerView.setAdapter(mAdapter);
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
         mRecyclerView.addItemDecoration(itemDecoration);
 
+    }
+
+    private ArrayList<DataObject> GetDataFromDB() {
+        ArrayList<DataObject> result = new ArrayList<DataObject>();
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        String[] projection = {
+                XMLItemsContract.XMLEntry._ID,
+                XMLItemsContract.XMLEntry.COLUMN_DATE,
+                XMLItemsContract.XMLEntry.COLUMN_NAME,
+                XMLItemsContract.XMLEntry.COLUMN_LINK};
+
+        String orderBy =XMLItemsContract.XMLEntry.COLUMN_TIMESTAMP + " ASC";
+        Cursor cursor = db.query(
+                XMLItemsContract.XMLEntry.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                orderBy);
+
+        try {
+            int idColumnIndex =             cursor.getColumnIndex(XMLItemsContract.XMLEntry._ID);
+            int titleColumnIndex =           cursor.getColumnIndex(XMLItemsContract.XMLEntry.COLUMN_NAME);
+            int linkColumnIndex =    cursor.getColumnIndex(XMLItemsContract.XMLEntry.COLUMN_LINK);
+            int dateColumnIndex =           cursor.getColumnIndex(XMLItemsContract.XMLEntry.COLUMN_DATE);
+
+
+            while (cursor.moveToNext()) {
+                int currentID = cursor.getInt(idColumnIndex);
+
+                String currentTitle = cursor.getString(titleColumnIndex);
+                String currentLink = cursor.getString(linkColumnIndex);
+                String currentDate = cursor.getString(dateColumnIndex);
+                Log.i("Info", currentTitle + " " + currentLink);
+                DataObject obj = new DataObject(currentTitle, currentLink, currentDate);
+                result.add(obj);
+            }
+        } finally {
+            cursor.close();
+        }
+        return result;
     }
 
 
@@ -132,6 +203,27 @@ public class ScrollingActivity extends AppCompatActivity {
 
         }
 
+        private boolean InsertObj(String title, String link, String date) {
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+
+            DataObject obj = new DataObject(title, link, date);
+            values.put(XMLItemsContract.XMLEntry.COLUMN_NAME, title);
+            values.put(XMLItemsContract.XMLEntry.COLUMN_LINK, link);
+            values.put(XMLItemsContract.XMLEntry.COLUMN_DATE, date);
+            values.put(XMLItemsContract.XMLEntry.COLUMN_TIMESTAMP, obj.getTimeStamp());
+
+
+            Cursor cursor = db.rawQuery("select " + XMLItemsContract.XMLEntry._ID +" from " + XMLItemsContract.XMLEntry.TABLE_NAME + "  WHERE link = '" + link + "'", null);
+
+            boolean result = false;
+            if(!cursor.moveToFirst()) {
+                long id = db.insert(XMLItemsContract.XMLEntry.TABLE_NAME, null, values);
+                result = true;
+            }
+            return result;
+        }
+
         private String getContent(String path) throws IOException, ParserConfigurationException, SAXException {
             /*BufferedReader reader=null;
             try {
@@ -164,8 +256,6 @@ public class ScrollingActivity extends AppCompatActivity {
 
                 NodeList nodeList = doc.getElementsByTagName("item");
 
-                ArrayList<DataObject> items = new ArrayList<DataObject>();
-                Log.i("Info_count", String.valueOf(nodeList.getLength()));
                 for (int i = 0; i < nodeList.getLength(); i++) {
                     Log.i("Info_i", String.valueOf(i));
                     Node node = nodeList.item(i);
@@ -175,16 +265,23 @@ public class ScrollingActivity extends AppCompatActivity {
                     Element titleElement = (Element) titleList.item(0);
                     titleList = titleElement.getChildNodes();
                     String title = ((Node) titleList.item(0)).getNodeValue();
-                    Log.i("Info_title", title);
 
                     NodeList dateList = element.getElementsByTagName("pubDate");
                     Element dateElement = (Element) dateList.item(0);
-
                     dateList = dateElement.getChildNodes();
                     String date = ((Node) dateList.item(0)).getNodeValue();
 
-                    DataObject obj = new DataObject(title, "", date);
-                    mData.add(obj);
+                    NodeList linkList = element.getElementsByTagName("link");
+                    Element linkElement = (Element) linkList.item(0);
+                    linkList = linkElement.getChildNodes();
+                    String link = ((Node) linkList.item(0)).getNodeValue();
+
+                    if(InsertObj(title, link, date))
+                    {
+                        DataObject obj = new DataObject(title, link, date);
+                        mData.add(obj);
+                    }
+
                 }
             } catch (Exception e) {
                 System.out.println("XML Pasing Excpetion = " + e);

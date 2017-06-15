@@ -12,29 +12,23 @@
         android:orientation="vertical"
         android:padding="16dp"
         >
-        <RelativeLayout
-            android:orientation="horizontal"
-            android:id="@+id/feedHeader"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/date"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical">
-            <TextView
-                android:id="@+id/title"
-                android:layout_alignParentLeft="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingTop="5dp"
-                android:text="Large Text"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:paddingTop="5dp"
+            android:text="date"
+            android:textAppearance="@style/TextAppearance.AppCompat" />
 
-            <TextView
-                android:id="@+id/date"
-                android:layout_alignParentRight="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingTop="5dp"
-                android:text="date"
-                android:textAppearance="@style/TextAppearance.AppCompat" />
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/title"
+            android:layout_alignParentLeft="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="5dp"
+            android:text="Large Text"
+            android:textAppearance="?android:attr/textAppearanceLarge" />
     </LinearLayout>
+
 </android.support.v7.widget.CardView>
