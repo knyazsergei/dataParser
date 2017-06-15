@@ -31,7 +31,7 @@ public class UpdateService extends Service {
     int i = 0;
     Timer timer;
     TimerTask tTask;
-    long interval = 5000;
+    long interval = 2000;
     String time;
     InfoUpdater infoUpdate;
     int mNewMessages = 0;
@@ -42,15 +42,13 @@ public class UpdateService extends Service {
         super.onCreate();
         Log.i(LOG_TAG, "service");
         timer = new Timer();
-        infoUpdate = new InfoUpdater(mNewMessages);
+        infoUpdate = new InfoUpdater(mNewMessages, getApplicationContext());
         tTask = new TimerTask() {
             public void run() {
+                Log.i("timer task", "started");
                 if (!infoUpdate.isAlive()) {
                     infoUpdate.start();
                     infoUpdate.join();
-                    if (infoUpdate.getNewMessagesCount() > 0) {
-                        sendNotif();
-                    }
                 }
             }
         };
@@ -67,33 +65,7 @@ public class UpdateService extends Service {
 
     public int onStartCommand(Intent intent, int flags, int startId) {
         time = intent.getStringExtra("time");
-
         return START_REDELIVER_INTENT;
-    }
-
-    void sendNotif() {
-        Log.i(LOG_TAG, "notify");
-        NotificationCompat.Builder mBuilder =
-                (NotificationCompat.Builder) new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.logo)
-                        .setContentTitle("Новости")
-                        .setContentText("У вас 0 новых сообщений");
-        Intent resultIntent = new Intent(this, ScrollingActivity.class);
-
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(ScrollingActivity.class);
-        stackBuilder.addNextIntent(resultIntent);
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(
-                        0,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                );
-
-        mBuilder.setContentIntent(resultPendingIntent);
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        mNotificationManager.notify(i++, mBuilder.build());
     }
 
     public IBinder onBind(Intent arg0) {

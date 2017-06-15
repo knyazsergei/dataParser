@@ -1,10 +1,15 @@
 package sergey.knyazev.dataparser;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import org.w3c.dom.Document;
@@ -32,13 +37,19 @@ public class InfoUpdater extends Activity implements Runnable {
     private boolean mIsAlive = false;
     private int i = 0;
     private int mNewMessages = 0;
+    private Context mContext;
+    XMLItemsDbHelper mDbHelper;//= new XMLItemsDbHelper(mContext);
+    SQLiteDatabase sqldb;// = mDbHelper.getWritableDatabase();
 
-    InfoUpdater(int newMessages) {
+    InfoUpdater(int newMessages, Context context) {
         mNewMessages = newMessages;
+        mContext = context;
         start();
+
     }
 
     public void run() {
+        Log.i("thread_run", "runned");
         mIsAlive = true;
         try {
             String strUrl = "https://lifehacker.ru/feed/";
@@ -50,6 +61,10 @@ public class InfoUpdater extends Activity implements Runnable {
 
             NodeList nodeList = doc.getElementsByTagName("item");
 
+            Context context = mContext;
+            mDbHelper = new XMLItemsDbHelper(context);
+            sqldb = mDbHelper.getWritableDatabase();
+
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node node = nodeList.item(i);
                 Element element = (Element) node;
@@ -59,10 +74,6 @@ public class InfoUpdater extends Activity implements Runnable {
                 linkList = linkElement.getChildNodes();
                 String link = ((Node) linkList.item(0)).getNodeValue();
 
-
-                XMLItemsDbHelper mDbHelper = new XMLItemsDbHelper(this);
-                SQLiteDatabase sqldb = mDbHelper.getWritableDatabase();
-                ContentValues values = new ContentValues();
                 Cursor cursor = sqldb.rawQuery("select " + XMLItemsContract.XMLEntry._ID +" from " + XMLItemsContract.XMLEntry.TABLE_NAME + "  WHERE link = '" + link + "'", null);
 
                 boolean result = false;
@@ -73,20 +84,50 @@ public class InfoUpdater extends Activity implements Runnable {
                 if(result)
                 {
                     mNewMessages = 1;
+                    sendNotif("new message");
                     Log.i("Updated", "new message");
                 }
                 else
                 {
+                    sendNotif("havent messages");
                     Log.i("Updated", "havent messages");
                 }
 
 
             }
         } catch (Exception e) {
-            System.out.println("XML Pasing Excpetion = " + e);
+            e.printStackTrace();
         }
         mIsAlive = false;
     }
+
+    public void sendNotif(String message) {
+        Log.i("thread", "notify");
+        NotificationCompat.Builder mBuilder =
+                (NotificationCompat.Builder) new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.logo)
+                        .setContentTitle("Новости")
+                        .setContentText(message);
+        Intent resultIntent = new Intent(mContext, ScrollingActivity.class);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+
+        stackBuilder.addParentStack(ScrollingActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        mBuilder.setContentIntent(resultPendingIntent);
+
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotificationManager.notify(i++, mBuilder.build());
+    }
+
     public void join()
     {
         try {
@@ -109,6 +150,7 @@ public class InfoUpdater extends Activity implements Runnable {
         thread = new Thread(this, String.valueOf(i++));
         mIsAlive = true;
         thread.start();
+        Log.i("thread", "start thread");
     }
 
     public int getNewMessagesCount()
