@@ -31,7 +31,7 @@ public class UpdateService extends Service {
     int i = 0;
     Timer timer;
     TimerTask tTask;
-    long interval = 2000;
+    long interval = 600000;
     String time;
     InfoUpdater infoUpdate;
     int mNewMessages = 0;

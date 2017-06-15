@@ -48,7 +48,8 @@ public class ScrollingActivity extends AppCompatActivity {
     private MyRecyclerViewAdapter mAdapter;
     private ArrayList<DataObject> mData;
     private XMLItemsDbHelper mDbHelper;
-    private boolean notify = false;
+    RecyclerView mRecyclerView;
+    LinearLayoutManager mLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,39 +93,33 @@ public class ScrollingActivity extends AppCompatActivity {
         mDbHelper = new XMLItemsDbHelper(this);
         mData = GetDataFromDB();
         //Items view
-        RecyclerView mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
+        mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         mRecyclerView.setHasFixedSize(true);
-        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                Log.i("scrolled", String.valueOf(dy));
-            /*
-            int visibleItemCount = layoutManager.getChildCount();//смотрим сколько элементов на экране
-            int totalItemCount = layoutManager.getItemCount();//сколько всего элементов
-            int firstVisibleItems = layoutManager.findFirstVisibleItemPosition();//какая позиция первого элемента
+                int totalItemCount = mLayoutManager.getItemCount();
+                int firstVisibleItemIndex = mLayoutManager.findLastVisibleItemPosition();
 
-            if (!isLoading) {//проверяем, грузим мы что-то или нет, эта переменная должна быть вне класса  OnScrollListener
-                if ( (visibleItemCount+firstVisibleItems) >= totalItemCount) {
-                    isLoading = true;//ставим флаг что мы попросили еще элемены
-                    if(loadingListener != null){
-                        loadingListener.loadMoreItems(totalItemCount);//тут я использовал калбэк который просто говорит наружу что нужно еще элементов и с какой позиции начинать загрузку
+
+                    if (firstVisibleItemIndex == totalItemCount) {
+                        Log.i("scroll", "load");
                     }
-                }
-            }
-            */
-            }
-        };
 
-        mRecyclerView.setOnScrollListener(scrollListener);
+            }
+        });
+
+
         mAdapter = new MyRecyclerViewAdapter(mData);
         mRecyclerView.setAdapter(mAdapter);
         RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
         mRecyclerView.addItemDecoration(itemDecoration);
 
     }
+
 
     private ArrayList<DataObject> GetDataFromDB() {
         ArrayList<DataObject> result = new ArrayList<DataObject>();
@@ -261,7 +256,6 @@ public class ScrollingActivity extends AppCompatActivity {
 
                     if(InsertObj(title, link, date))
                     {
-                        notify = true;
                         DataObject obj = new DataObject(title, link, date);
                         mData.add(obj);
                     }
